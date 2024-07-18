@@ -1,40 +1,68 @@
 package com.capuras.dishdirect.api.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 
+@Document(collection = "recipes")
 public class Recipe {
-    private String RecipeTile;
-    private Double RecipePrice;
-    private Date OrderDate;
+
+    @Id
+    private String id;
+    private String recipeTitle;
+    private String recipeIngredients;
+    private String recipeInstructions;
+    private Double recipePrice;
 
 
-    public Recipe(String title, double price, Date dateOrdered) {
-        this.RecipeTile = title;
-        this.RecipePrice = price;
-        this.OrderDate = dateOrdered;
+
+    public Recipe(String title, String ingredients, String instructions, Double price) {
+        this.recipeTitle = title;
+        this.recipeIngredients = ingredients;
+        this.recipeInstructions = instructions;
+        this.recipePrice = price;
+
     }
 
-    public String getRecipeTile() {
-        return RecipeTile;
+    public Recipe(){}
+
+    public String getId(){
+        return id;
+    }
+    public String getRecipeTitle() {
+        return recipeTitle;
     }
 
-    public void setRecipeTile(String recipeTile) {
-        RecipeTile = recipeTile;
+    public void setRecipeTitle(String recipeTitle) {
+        this.recipeTitle = recipeTitle;
     }
 
     public Double getRecipePrice() {
-        return RecipePrice;
+        return recipePrice;
     }
 
     public void setRecipePrice(Double recipePrice) {
-        RecipePrice = recipePrice;
+        this.recipePrice = recipePrice;
     }
 
-    public Date getOrderDate() {
-        return OrderDate;
+
+    public String getRecipeIngredients() {
+        return recipeIngredients;
     }
 
-    public void setOrderDate(Date orderDate) {
-        OrderDate = orderDate;
+    public void setRecipeIngredients(String recipeIngredients) {
+        this.recipeIngredients = recipeIngredients;
+    }
+
+    public String getRecipeInstructions() {
+        return recipeInstructions;
+    }
+
+    public void setRecipeInstructions(String recipeInstructions) {
+        this.recipeInstructions = recipeInstructions;
     }
 }
