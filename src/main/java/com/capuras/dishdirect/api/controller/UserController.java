@@ -1,8 +1,12 @@
 package com.capuras.dishdirect.api.controller;
 
+import com.capuras.dishdirect.api.model.Order;
 import com.capuras.dishdirect.api.model.Recipe;
 import com.capuras.dishdirect.api.model.User;
+import com.capuras.dishdirect.api.repository.RecipeRepository;
 import com.capuras.dishdirect.api.repository.UserRepository;
+import com.capuras.dishdirect.dto.OrderRequest;
+import com.capuras.dishdirect.dto.SignUpRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 
 @RestController
@@ -20,12 +25,9 @@ public class UserController {
     @Autowired
     private UserRepository userRepo;
 
+    @Autowired
+    private RecipeRepository recipeRepo;
 
-    @ApiIgnore
-    @RequestMapping(value = "/")
-    public void redirect(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/swagger-ui.html");
-    }
 
 
     @GetMapping("/users")
@@ -35,20 +37,24 @@ public class UserController {
 
     }
     @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody User user) {
+    public ResponseEntity<String> signup(@RequestBody SignUpRequest sup) {
+
         // Check for empty fields
-        if ( user.getUserName().isEmpty() || user.getPassword().isEmpty() || user.getEmail().isEmpty() || user.getPhoneNo().isEmpty()) {
+        if ( sup.getUserName().isEmpty() || sup.getPassword().isEmpty() || sup.getConfirmPassword().isEmpty() || sup.getEmail().isEmpty() || sup.getPhoneNo().isEmpty()) {
             return ResponseEntity.badRequest().body("All fields must be filled");
         }
-
+        // Check if password is matched
+        if (!sup.getPassword().equals(sup.getConfirmPassword())){
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password does not match");
+        }
         // Check if user already exists
-        if (userRepo.findByUserName(user.getUserName()) != null) {
+        if (userRepo.findByUserName(sup.getUserName()) != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("User already exists");
         }
-
         // Save new user
         else {
-            userRepo.save(user);
+            User newUser = new User(sup.getUserName(),sup.getPassword(),sup.getEmail(),sup.getPhoneNo());
+            userRepo.save(newUser);
             return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
         }
     }
@@ -65,27 +71,31 @@ public class UserController {
         }
     }
 
-    @PostMapping("/order")
-    public ResponseEntity<String> inputOrder(@RequestParam String userName, @RequestBody Recipe recipe) {
+    @PostMapping("/users/{userName}/orders")
+    public ResponseEntity<String> inputOrder(@RequestParam String userName, @RequestParam String recipeTitle) {
         // Find user by username from MongoDB
         User existingUser = userRepo.findByUserName(userName);
+        // Find recipe by recipe title from MongoDB
+        Recipe existingRecipe = recipeRepo.findByRecipeTitle(recipeTitle);
 
         // Check if user exists
         if (existingUser == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
-        // Add order to user's orders
-        else {
-            recipe.setOrderDate(new Date()); // Set current date as order date
-            existingUser.addOrder(recipe);
-
-            // Save updated user in MongoDB
-            userRepo.save(existingUser);
-            return ResponseEntity.ok("Recipe ordered successfully");
+        // Check if recipe exists
+        if (existingRecipe == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
         }
+        else {
+            Order orders = new Order(existingRecipe.getRecipeTitle(),existingRecipe.getRecipePrice(), new Date());
+            existingUser.addOrder(orders);
+            userRepo.save(existingUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Recipe Ordered successfully");
+
+        }
+
     }
-    @GetMapping("/{userName}/orders")
+    @GetMapping("/users/{userName}/orders")
     public ResponseEntity<?> getUserOrders(@PathVariable String userName) {
         // Find user by username from MongoDB
         User existingUser = userRepo.findByUserName(userName);
@@ -95,9 +105,8 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
         else {
-            // Return user's orders
-            List<Recipe> orders = existingUser.getOrders();
-            return ResponseEntity.ok(orders);
+
+            return ResponseEntity.ok(existingUser.getOrders());
         }
     }
 
