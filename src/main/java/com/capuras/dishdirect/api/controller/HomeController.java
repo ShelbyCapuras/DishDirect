@@ -7,6 +7,7 @@ import springfox.documentation.annotations.ApiIgnore;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@CrossOrigin(origins="*")
 @Controller
 public class HomeController {
 
