@@ -9,6 +9,7 @@ import java.io.IOException;
 
 @CrossOrigin(origins="*")
 @Controller
+@RestController
 public class HomeController {
 
 
