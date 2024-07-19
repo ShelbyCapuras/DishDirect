@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-@CrossOrigins(origins="*")
+@CrossOrigin(origins="*")
 @RestController
 public class RecipeController {
 
